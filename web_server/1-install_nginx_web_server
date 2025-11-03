@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env/bash
 # Bash script to install and configure Nginx web server
 
 # Update and install nginx non-interactively
