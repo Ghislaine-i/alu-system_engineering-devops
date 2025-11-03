@@ -1,12 +1,30 @@
-onfigures a new Ubuntu machine to redirect /redirect_me to another page using Nginx
+#!/usr/bin/env bash
+# Configures Nginx server to redirect /redirect_me to another page with a 301 status code
 
-# Install nginx if not already installed
+# Update package lists and install nginx
 sudo apt-get update -y
 sudo apt-get install -y nginx
 
-# Replace default Nginx config with one that includes the redirection
-sudo sed -i '/listen 80 default_server;/a \
-    location /redirect_me {\n        return 301 https://www.youtube.com/watch?v=QH2-TGUlwu4;\n    }' /etc/nginx/sites-available/default
+# Create a redirection rule in the default Nginx server block
+sudo bash -c 'cat > /etc/nginx/sites-available/default <<EOF
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
 
-# Restart Nginx to apply the changes
-sudo service nginx restart
+    root /var/www/html;
+    index index.html index.htm;
+
+    server_name _;
+
+    location / {
+        try_files \$uri \$uri/ =404;
+    }
+
+    location /redirect_me {
+        return 301 https://www.youtube.com/watch?v=QH2-TGUlwu4;
+    }
+}
+EOF'
+
+# Restart nginx to apply changes
+sudo systemctl restart nginx
