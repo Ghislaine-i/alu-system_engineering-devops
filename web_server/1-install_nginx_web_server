@@ -1,41 +1,18 @@
-#!/usr/bin/env bash
-# Bash script to install and configure Nginx web server
-
-# Update package list and install nginx with -y flag
+#!/bin/env bash
+# Update package lists
 apt-get update -y
+
+# Install nginx with -y flag to automatically confirm
 apt-get install nginx -y
 
-# Create the custom HTML page with EXACT required content
-echo "Holberton School for the win!" > /var/www/html/index.html
+# Create custom HTML page with required string
+echo "Holberton School for the win!" > /var/www/html/index.nginx-debian.html
 
-# Ensure the default nginx site is enabled
-cp /etc/nginx/sites-available/default /etc/nginx/sites-available/default.backup
+# Ensure nginx is configured to listen on port 80 (default)
+# Restart nginx without using systemctl
+service nginx restart
 
-# Configure nginx to serve our custom content
-cat > /etc/nginx/sites-available/default << 'EOF'
-server {
-    listen 80 default_server;
-    listen [::]:80 default_server;
-    
-    root /var/www/html;
-    index index.html index.htm;
-    
-    server_name _;
-    
-    location / {
-        try_files $uri $uri/ =404;
-    }
-}
-EOF
+# Check if nginx is running on port 80
+netstat -lnt | grep ':80 '
 
-# Test nginx configuration
-nginx -t
-
-# Start nginx service (without systemctl)
-service nginx stop
-service nginx start
-
-# Verify nginx is running and listening on port 80
-netstat -tulpn | grep :80
-
-echo "Nginx installation complete. Test with: curl localhost"
+# The script should now be ready - nginx will serve "Holberton School for the win!" on port 80
