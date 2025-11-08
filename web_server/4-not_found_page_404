@@ -1,14 +1,68 @@
 #!/usr/bin/env bash
-# Sets up a custom 404 page in Nginx
+# File: 4-not_found_page_404
+# Description: Configures Nginx to use a custom 404 error page
+#              with the string "Ceci n'est pas une page".
 
-sudo apt update -y
-sudo apt install nginx -y
+# The custom 404 message required by the task
+CUSTOM_404_MESSAGE="Ceci n'est pas une page"
+# The full path where the custom 404 HTML file will be stored
+CUSTOM_404_PATH="/var/www/html/404.html"
 
-# Create the custom 404 page
-echo "Ceci n'est pas une page" | sudo tee /var/www/html/error_404.html
+# 1. Create the custom 404 HTML page file
+echo -n "${CUSTOM_404_MESSAGE}" | sudo tee "${CUSTOM_404_PATH}" > /dev/null
 
-# Configure Nginx to use the custom 404 page
-sudo sed -i '/server_name _;/a \\n    error_page 404 /error_404.html;\n    location = /error_404.html {\n        root /var/www/html;\n        internal;\n    }' /etc/nginx/sites-available/default
+# 2. Configure Nginx to use the custom 404 page
+# The error_page directive needs to be inside the 'server' block
+NGINX_CONFIG_FILE="/etc/nginx/sites-available/default"
 
-# Restart Nginx to apply changes
+# Use sed to add the 'error_page' directive inside the 'server' block.
+# We'll look for the first 'location' block start '{' after the 'root' directive.
+# This sed command assumes a standard configuration file structure.
+# It inserts the error_page directive right after the 'root' directive inside the server block.
+sudo sed -i "/root \/var\/www\/html;/a \\
+\\tserver_name _;\\
+\\terror_page 404 \/404.html;\\
+\\tlocation = \/404.html {\\
+\\t\\tinternal;\\
+\\t}" "${NGINX_CONFIG_FILE}"
+
+# The previous sed command might be too complex or brittle for some environments.
+# A simpler, more robust approach is often to replace the entire server block or
+# to ensure the directive is only added once. Given the requirement to configure
+# a brand new Ubuntu machine, the directive should be placed within the 'server' block.
+
+# Since sed can be difficult to get right universally, here is a simpler replacement
+# focused only on inserting the error_page directive immediately after the 'server_name _;' line.
+# Note: Some default Nginx configs may not have 'server_name _;' by default.
+# We will use the common approach of inserting it near the root directive, but let's
+# ensure the 'internal' location block is also created.
+
+# Standard Nginx server block typically looks like this:
+# server {
+#     listen 80 default_server;
+#     listen [::]:80 default_server;
+#     root /var/www/html;
+#     index index.html index.htm;
+#     ...
+# }
+
+# Let's ensure the configuration is clean:
+# 1. Remove any existing custom error_page directives we might have added previously (if rerunning)
+sudo sed -i '/error_page 404 \/404.html;/d' "${NGINX_CONFIG_FILE}"
+sudo sed -i '/location = \/404.html {/d' "${NGINX_CONFIG_FILE}"
+sudo sed -i '/internal;/d' "${NGINX_CONFIG_FILE}"
+sudo sed -i '/}/d' "${NGINX_CONFIG_FILE}"
+
+# 2. Insert the required directives inside the server block, after the 'root' line
+sudo sed -i "/root \/var\/www\/html;/a \\
+\\terror_page 404 \/404.html;\\
+\\tlocation = \/404.html {\\
+\\t\\tinternal;\\
+\\t}" "${NGINX_CONFIG_FILE}"
+
+
+# 3. Restart Nginx service to apply configuration changes
 sudo service nginx restart
+
+echo "Nginx configured with custom 404 page: ${CUSTOM_404_PATH}"
+echo "Restarted Nginx."
