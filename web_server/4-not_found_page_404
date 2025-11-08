@@ -10,7 +10,6 @@ echo "Hello World!" > /var/www/html/index.nginx-debian.html
 echo "Ceci n'est pas une page" > /var/www/html/custom_404.html
 # Configure Nginx to use custom 404 page
 # Add error_page directive after the server_name directive
-string_to_add="\\\terror_page 404 /custom_404.html;\n\tlocation = /custom_404.html {\n\t\troot /var/www/html;\n\t}"
-sed -i "/server_name _;/a $string_to_add" /etc/nginx/sites-available/default
+sed -i '/server_name _;/a \\terror_page 404 /custom_404.html;' /etc/nginx/sites-available/default
 # Restart nginx without using systemctl
 service nginx restart
