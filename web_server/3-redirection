@@ -1,30 +1,16 @@
 #!/usr/bin/env bash
-# Script that configures Nginx to redirect /redirect_me to another page
+# Script that configures Nginx to redirect /redirect_me to another page (301)
 
-# Install nginx if not installed
+# Exit immediately if a command fails
+set -e
+
+# Install nginx if not already installed
 sudo apt-get update -y
 sudo apt-get install -y nginx
 
-# Create the redirection configuration
-sudo bash -c 'cat > /etc/nginx/sites-available/default <<EOF
-server {
-    listen 80 default_server;
-    listen [::]:80 default_server;
+# Add redirection configuration using sed
+sudo sed -i '/server_name _;/a \
+    location /redirect_me {\n        return 301 https://www.youtube.com/watch?v=QH2-TGUlwu4;\n    }\n' /etc/nginx/sites-available/default
 
-    root /var/www/html;
-    index index.html index.htm index.nginx-debian.html;
-
-    server_name _;
-
-    location /redirect_me {
-        return 301 https://www.youtube.com/watch?v=QH2-TGUlwu4;
-    }
-
-    location / {
-        try_files \$uri \$uri/ =404;
-    }
-}
-EOF'
-
-# Restart nginx to apply the change
+# Restart nginx to apply changes
 sudo systemctl restart nginx
