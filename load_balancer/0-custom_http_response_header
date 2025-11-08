@@ -1,33 +1,35 @@
 #!/usr/bin/env bash
-# File: 0-custom_http_response_header
-# Description: Configures Nginx to add the X-Served-By HTTP response header,
-#              using the server's hostname as its value.
+# Script to configure Nginx with a custom HTTP response header
+# Adds X-Served-By header with the server hostname
 
-# Target configuration file for Nginx default server block
-NGINX_CONFIG_FILE="/etc/nginx/sites-available/default"
-HEADER_DIRECTIVE="add_header X-Served-By \$hostname;"
+# Exit on error
+set -e
 
-# 1. Ensure Nginx is installed
-if ! command -v nginx &> /dev/null
-then
-    echo "Nginx not found. Installing Nginx..."
-    sudo apt-get update
-    sudo apt-get -y install nginx
-fi
+# Install Nginx if not already installed
+sudo apt-get update -y
+sudo apt-get install -y nginx
 
-# 2. Modify the Nginx configuration file
+# Get the hostname of the server
+HOSTNAME=$(web-01)
 
-# a. Check if the header directive already exists and remove it to prevent duplicates
-sudo sed -i '/add_header X-Served-By/d' "${NGINX_CONFIG_FILE}"
+# Add the custom header inside the default server block
+# (This overwrites any existing config with a working one)
+sudo bash -c "cat > /etc/nginx/sites-available/default" <<EOF
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
 
-# b. Insert the header directive inside the 'server' block.
-# We'll insert it immediately after the 'listen 80 default_server;' line
-# This ensures it is within the correct configuration scope.
-sudo sed -i "/listen 80 default_server;/a \\
-\\t${HEADER_DIRECTIVE}" "${NGINX_CONFIG_FILE}"
+    root /var/www/html;
+    index index.html index.htm index.nginx-debian.html;
 
-# 3. Restart Nginx to apply the configuration change
-echo "Reloading Nginx configuration..."
-sudo service nginx restart
+    server_name _;
 
-echo "Nginx configured successfully with X-Served-By header."
+    location / {
+        add_header X-Served-By \$HOSTNAME;
+        try_files \$uri \$uri/ =404;
+    }
+}
+EOF
+
+# Restart Nginx to apply the changes
+sudo systemctl restart nginx
