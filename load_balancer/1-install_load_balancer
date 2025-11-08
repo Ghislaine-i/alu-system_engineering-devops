@@ -50,6 +50,12 @@ EOF
 
 echo "$CONFIG_CONTENT" | sudo tee /etc/haproxy/haproxy.cfg > /dev/null
 
-# 3. Enable HAproxy startup at boot and restart service
+# 3. Enable HAproxy startup and restart service (More robust service management)
+# Ensure the init script ENABLED=1 line is set (for compatibility)
 sudo sed -i 's/ENABLED=0/ENABLED=1/' /etc/default/haproxy
+
+# Use systemctl to ensure the service is enabled to start on boot
+sudo systemctl enable haproxy
+
+# Restart the service to load the new configuration
 sudo service haproxy restart
