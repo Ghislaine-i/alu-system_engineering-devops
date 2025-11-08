@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-# Script that configures Nginx to redirect /redirect_me to another page (301)
+# Configures a brand new Ubuntu machine with Nginx and a 301 redirect
 
-# Exit immediately if a command fails
-set -e
+# Update package list and install Nginx
+apt-get update
+apt-get install -y nginx
 
-# Install nginx if not already installed
-sudo apt-get update -y
-sudo apt-get install -y nginx
+# Create a simple index page
+echo "Hello World!" > /var/www/html/index.html
 
-# Add redirection configuration using sed
-sudo sed -i '/server_name _;/a \
-    location /redirect_me {\n        return 301 https://www.youtube.com/watch?v=QH2-TGUlwu4;\n    }\n' /etc/nginx/sites-available/default
+# Configure Nginx to redirect /redirect_me to YouTube with 301
+# Add the redirect location block after the server_name directive
+sed -i '/server_name _;/a \\n\tlocation /redirect_me {\n\t\treturn 301 https://www.youtube.com/watch?v=QH2-TGUlwu4;\n\t}' /etc/nginx/sites-available/default
 
-# Restart nginx to apply changes
-sudo systemctl restart nginx
+# Restart Nginx to apply changes
+service nginx restart
