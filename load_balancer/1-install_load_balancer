@@ -24,8 +24,8 @@ if ! grep -q "frontend eddy-frontend" /etc/haproxy/haproxy.cfg; then
 
     backend eddy-backend
         balance roundrobin
-        server 6310-web-01 3.93.220.110:80 check
-        server 6310-web-02 54.89.213.49:80 check"
+        server 6838-web-01 54.88.121.204:80 check
+        server 6838-web-02 52.87.157.15:80 check"
     
     # Append the configuration to haproxy.cfg
     echo "$server_config" | sudo tee -a /etc/haproxy/haproxy.cfg
